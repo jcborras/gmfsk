@@ -67,6 +67,9 @@ else
 	AC_MSG_NOTICE([Disabling hamlib support])
 fi
 
+PKG_CHECK_MODULES(libpulse_simple,libpulse-simple, ,AC_MSG_ERROR([*** libpulse-simple devel is not installed - please install first ***]))
+AC_CHECK_LIB(pulse-simple,main, ,AC_MSG_ERROR([*** libpulse-simple devel is not installed - please install first ***]))
+
 # Checks for header files.
 AC_HEADER_STDC
 AC_CHECK_HEADERS([fcntl.h limits.h stdlib.h string.h sys/ioctl.h unistd.h dfftw.h fftw.h linux/ppdev.h])
@@ -111,5 +114,4 @@ AC_CONFIG_FILES([Makefile
 		 src/samplerate/Makefile
 		 src/throb/Makefile])
 
-CFLAGS=-Werror
 AC_OUTPUT

@@ -39,6 +39,10 @@
 #include <sys/soundcard.h>
 #include <sys/ioctl.h>
 
+#ifdef HAVE_LIBPULSE_SIMPLE
+#include <pulse/simple.h>
+#endif /* HAVE_LIBPULSE_SIMPLE */
+
 #include "snd.h"
 #include "misc.h"
 #include "cwirc.h"
@@ -57,6 +61,11 @@ static snd_config_t newconfig;
 
 static gint snd_fd = -1;
 static gint snd_dir = 0;
+
+#ifdef HAVE_LIBPULSE_SIMPLE
+static pa_simple *pas_in=NULL;
+static pa_simple *pas_out=NULL;
+#endif /* HAVE_LIBPULSE_SIMPLE */
 
 static gint16 snd_w_buffer[2 * SND_BUF_LEN];
 static guint8 snd_b_buffer[2 * SND_BUF_LEN];
@@ -304,16 +313,40 @@ gint sound_open_for_write(gint rate)
 		config.txoffset = 0;
 	}
 
-	if (cwirc_extension_mode)
+	if (cwirc_extension_mode) {
 		snd_fd = 0;
-	else if (config.flags & SND_FLAG_TESTMODE_MASK)
+	} else if (config.flags & SND_FLAG_TESTMODE_MASK) {
 		snd_fd = 1;
-	else if (!(config.flags & SND_FLAG_FULLDUP))
-		snd_fd = opensnd(O_WRONLY);
-	else if (snd_fd < 0)
-		snd_fd = opensnd(O_RDWR);
+	} else if (strcmp(config.device,"PulseAudio")==0) {
+		pa_sample_spec ss;
+		if (config.flags & SND_FLAG_8BIT==SND_FLAG_8BIT)
+			ss.format = PA_SAMPLE_U8;
+		else
+			ss.format = PA_SAMPLE_S16NE;
+		if (config.flags & SND_FLAG_STEREO==SND_FLAG_STEREO)
+			ss.channels = 2;
+		else
+			ss.channels = 1;
+		ss.rate = config.samplerate;
 
-	if (snd_fd < 0)
+		pas_out = pa_simple_new(
+			NULL,			// Use the default server.
+			PACKAGE,		// Our application's name.
+			PA_STREAM_PLAYBACK,
+			NULL,			// Use the default device.
+			"Ham Radio Data",	// Description of our stream.
+			&ss,			// Our sample format.
+			NULL,			// Use default channel map
+			NULL,			// Use default buffering attributes.
+			NULL			// Ignore error code.
+		);
+	} else if (!(config.flags & SND_FLAG_FULLDUP)) {
+		snd_fd = opensnd(O_WRONLY);
+	} else if (snd_fd < 0) {
+		snd_fd = opensnd(O_RDWR);
+	}
+
+	if (snd_fd < 0 && pas_out==NULL)
 		return -1;
 
 	snd_dir = O_WRONLY;
@@ -325,14 +358,20 @@ gint sound_open_for_write(gint rate)
 			src_delete(tx_src_state);
 			tx_src_state = NULL;
 		}
-		return snd_fd;
+		if (!pas_out)
+			return snd_fd;
+		else
+			return 1;
 	}
 
 	ratio = real_rate / rate;
 
 	if (tx_src_state && tx_src_data && tx_src_data->src_ratio == ratio) {
 		src_reset(tx_src_state);
-		return snd_fd;
+		if (!pas_out)
+			return snd_fd;
+		else
+			return 1;
 	}
 
 #if SND_DEBUG
@@ -348,6 +387,8 @@ gint sound_open_for_write(gint rate)
 	if (tx_src_state == NULL) {
 		snderr(_("sound_open_for_write: src_new failed: %s"), src_strerror(err));
 		snd_fd = -1;
+		pa_simple_free(pas_out);
+		pas_out=NULL;
 		return -1;
 	}
 
@@ -356,7 +397,10 @@ gint sound_open_for_write(gint rate)
 
 	tx_src_data->src_ratio = ratio;
 
-	return snd_fd;
+	if (!pas_out)
+		return snd_fd;
+	else
+		return 1;
 }
 
 gint sound_open_for_read(gint rate)
@@ -373,20 +417,43 @@ gint sound_open_for_read(gint rate)
 		config.rxoffset = 0;
 	}
 
-	if (cwirc_extension_mode)
+	if (cwirc_extension_mode) {
 		snd_fd = 0;
-	else if (config.flags & SND_FLAG_TESTMODE_MASK)
+	} else if (config.flags & SND_FLAG_TESTMODE_MASK) {
 		snd_fd = 0;
-	else if (!(config.flags & SND_FLAG_FULLDUP))
-		snd_fd = opensnd(O_RDONLY);
-	else if (snd_fd < 0)
-		snd_fd = opensnd(O_RDWR);
+	} else if (strcmp(config.device,"PulseAudio")==0) {
+		pa_sample_spec ss;
+		if (config.flags & SND_FLAG_8BIT==SND_FLAG_8BIT)
+			ss.format = PA_SAMPLE_U8;
+		else
+			ss.format = PA_SAMPLE_S16NE;
+		if (config.flags & SND_FLAG_STEREO==SND_FLAG_STEREO)
+			ss.channels = 2;
+		else
+			ss.channels = 1;
+		ss.rate = config.samplerate;
 
-	if (snd_fd < 0)
+		pas_in = pa_simple_new(
+			NULL,			// Use the default server.
+			PACKAGE,		// Our application's name.
+			PA_STREAM_RECORD,
+			NULL,			// Use the default device.
+			"Ham Radio Data",	// Description of our stream.
+			&ss,			// Our sample format.
+			NULL,			// Use default channel map
+			NULL,			// Use default buffering attributes.
+			NULL			// Ignore error code.
+		);
+	} else if (!(config.flags & SND_FLAG_FULLDUP)) {
+		snd_fd = opensnd(O_RDONLY);
+	} else if (snd_fd < 0) {
+		snd_fd = opensnd(O_RDWR);
+	}
+
+	if (snd_fd < 0 && !pas_in)
 		return -1;
 
 	snd_dir = O_RDONLY;
-
 	real_rate = config.samplerate * (1.0 + config.rxoffset / 1e6);
 
 	if (rate == real_rate) {
@@ -394,14 +461,20 @@ gint sound_open_for_read(gint rate)
 			src_delete(rx_src_state);
 			rx_src_state = NULL;
 		}
-		return snd_fd;
+		if (!pas_in)
+			return snd_fd;
+		else
+			return 1;
 	}
 
 	ratio = rate / real_rate;
 
 	if (rx_src_state && rx_src_data && rx_src_data->src_ratio == ratio) {
 		src_reset(rx_src_state);
-		return snd_fd;
+		if (!pas_in)
+			return snd_fd;
+		else
+			return 1;
 	}
 
 #if SND_DEBUG
@@ -417,6 +490,8 @@ gint sound_open_for_read(gint rate)
 	if (rx_src_state == NULL) {
 		snderr(_("sound_open_for_read: src_new failed: %s"), src_strerror(err));
 		snd_fd = -1;
+		pa_simple_free(pas_in);
+		pas_in=NULL;
 		return -1;
 	}
 
@@ -425,7 +500,10 @@ gint sound_open_for_read(gint rate)
 
 	rx_src_data->src_ratio = ratio;
 
-	return snd_fd;
+	if (!pas_in)
+		return snd_fd;
+	else
+		return 1;
 }
 
 void sound_close(void)
@@ -456,11 +534,20 @@ void sound_close(void)
 #endif
 
 	/* never close stdin/out/err */
-	if (snd_fd > 2) {
+	if (!pas_in && !pas_out && snd_fd > 2) {
 		if (ioctl(snd_fd, SNDCTL_DSP_SYNC, 0) < 0)
 			snderr(_("sound_close: ioctl: SNDCTL_DSP_SYNC: %m"));
 		close(snd_fd);
 		snd_fd = -1;
+	} else {
+		if (pas_in) {
+			pa_simple_free(pas_in);
+			pas_in=NULL;
+		}
+		if (pas_out) {
+			pa_simple_free(pas_out);
+			pas_out=NULL;
+		}
 	}
 }
 
@@ -485,7 +572,7 @@ gint sound_write(gfloat *buf, gint cnt)
 	if ((config.flags & SND_FLAG_TESTMODE_MASK) == SND_FLAG_TESTMODE_RX)
 		return cnt;
 
-	if (snd_fd < 0) {
+	if (snd_fd < 0 && !pas_out) {
 		snderr(_("sound_write: fd < 0"));
 		return -1;
 	}
@@ -513,7 +600,6 @@ static gint write_samples(gfloat *buf, gint count)
 {
 	void *p;
 	gint i, j;
-
 #if SND_DEBUG > 1
 	dprintf("write_samples(%d)\n", count);
 #endif
@@ -554,8 +640,20 @@ static gint write_samples(gfloat *buf, gint count)
 	if (config.flags & SND_FLAG_STEREO)
 		count *= 2;
 
-	if ((i = write(snd_fd, p, count)) < 0)
-		snderr(_("write_samples: write: %m"));
+	if (pas_out) {
+		int err=0;
+		pa_simple_write(pas_out,p,count,&err);
+		if (err==PA_OK) {
+			i=count;
+		} else {
+			i=-1;
+			errno=EIO;
+			snderr(_("write_samples: pa_simple_write: %m"));
+		}
+	} else {
+		if ((i = write(snd_fd, p, count)) < 0)
+			snderr(_("write_samples: write: %m"));
+	}
 
 	return i;
 }
@@ -586,7 +684,7 @@ gint sound_read(gfloat **buffer, gint *count)
 		return 0;
 	}
 
-	if (snd_fd < 0) {
+	if (snd_fd < 0 && !pas_in) {
 		snderr(_("sound_read: fd < 0"));
 		return -1;
 	}
@@ -645,8 +743,20 @@ static gint read_samples(gfloat *buf, gint count)
 	if (config.flags & SND_FLAG_8BIT) {
 		count *= sizeof(guint8);
 
-		if ((len = read(snd_fd, snd_b_buffer, count)) < 0)
-			goto error;
+		if (pas_in) {
+			int err=0;
+			pa_simple_read(pas_in,snd_b_buffer,count,&err);
+			if (err==PA_OK) {
+				len=count;
+			} else {
+				len=-1;
+				errno=EIO;
+				goto error;
+			}
+		} else {
+			if ((len = read(snd_fd, snd_b_buffer, count)) < 0)
+				goto error;
+		}
 
 		len /= sizeof(guint8);
 
@@ -661,8 +771,20 @@ static gint read_samples(gfloat *buf, gint count)
 	} else {
 		count *= sizeof(gint16);
 
-		if ((len = read(snd_fd, snd_w_buffer, count)) < 0)
-			goto error;
+		if (pas_in) {
+			int err=0;
+			pa_simple_read(pas_in,snd_w_buffer,count,&err);
+			if (err==PA_OK) {
+				len=count;
+			} else {
+				len=-1;
+				errno=EIO;
+				goto error;
+			}
+		} else {
+			if ((len = read(snd_fd, snd_w_buffer, count)) < 0)
+				goto error;
+		}
 
 		len /= sizeof(gint16);
 

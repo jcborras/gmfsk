@@ -209,7 +209,6 @@ int cw_txprocess(struct trx *trx)
 	}
 
 	c = trx_get_tx_char();
-
 	/* TX buffer empty */
 	if (c == -1) {
 		/* stop if requested to... */

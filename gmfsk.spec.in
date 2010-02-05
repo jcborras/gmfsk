@@ -14,6 +14,8 @@ Group:		Applications/Communications
 Source:		ftp://ftp.hes.iki.fi/pub/ham/unix/linux/hfmodems/%{name}-%{version}.tar.gz
 BuildRoot:	/var/tmp/%{name}-root
 BuildRequires:	scrollkeeper >= %skreq
+BuildRequires:	hamlib-devel
+BuildRequires:	pulseaudio-libs-devel
 
 %description
 
