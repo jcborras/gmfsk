@@ -24,6 +24,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <complex.h>
 
 #include "trx.h"
 #include "throb.h"
@@ -39,8 +40,8 @@ static inline complex mixer(struct trx *trx, complex in)
 	complex z;
 	float f;
 
-	c_re(z) = cos(s->phaseacc);
-	c_im(z) = sin(s->phaseacc);
+	__real__ z = cos(s->phaseacc);
+	__imag__ z = sin(s->phaseacc);
 
 	z = cmul(z, in);
 
@@ -215,7 +216,7 @@ int throb_rxprocess(struct trx *trx, float *buf, int len)
 
 	while (len-- > 0) {
 		/* create analytic signal */
-		c_re(z) = c_im(z) = *buf++;
+		__real__ z = __imag__ z = *buf++;
 
 		filter_run(s->hilbert, z, &z);
 

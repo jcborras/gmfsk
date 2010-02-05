@@ -486,7 +486,7 @@ static void druid_test_sound(const gchar *path, gboolean eb, gboolean st)
 	gdouble f, phi = 0.0;
 	gint i;
 
-	cfg.device = path;
+	cfg.device = (gchar *) path;
 	cfg.samplerate = SAMPLERATE;
 	cfg.txoffset = 0;
 	cfg.rxoffset = 0;

@@ -390,7 +390,7 @@ static int cw_process(struct trx *trx, int cw_event, unsigned char **c)
 		    element_usec <= (4 * s->cw_receive_dot_length) &&
 		    s->cw_receive_state == RS_AFTER_TONE) {
 			/* Look up the representation */
-			*c = cw_rx_lookup(s->cw_receive_representation_buffer);
+			*c = (unsigned char*) cw_rx_lookup(s->cw_receive_representation_buffer);
 
 			if (*c == NULL)
 				// invalid decode... let user see error

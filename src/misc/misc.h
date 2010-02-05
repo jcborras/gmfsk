@@ -28,6 +28,10 @@
 #include <glib.h>
 #include <math.h>
 
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
 /* ---------------------------------------------------------------------- */
 
 /*
@@ -104,6 +108,7 @@ extern inline guint8 rbits8(guint8 w)
 
 /* ---------------------------------------------------------------------- */
 
+#ifndef HAVE_LOG2
 /*
  * Integer base-2 logarithm
  */
@@ -120,6 +125,7 @@ extern inline guint log2(guint x)
 
 	return y;
 }
+#endif /* !HAVE_LOG2 */
 
 /* ---------------------------------------------------------------------- */
 

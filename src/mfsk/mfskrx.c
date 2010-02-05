@@ -43,6 +43,7 @@ char *alloca ();
 
 #include <stdlib.h>
 #include <string.h>
+#include <complex.h>
 #include <ctype.h>
 
 #include "mfsk.h"
@@ -224,8 +225,8 @@ static complex mixer(struct trx *trx, complex in)
 	/* Basetone is always 1000 Hz */
 	f -= 1000.0;
 
-	c_re(z) = cos(m->phaseacc);
-	c_im(z) = sin(m->phaseacc);
+	__real__ z = cos(m->phaseacc);
+	__imag__ z = sin(m->phaseacc);
 
 	z = cmul(z, in);
 
@@ -325,7 +326,7 @@ int mfsk_rxprocess(struct trx *trx, float *buf, int len)
 
 	while (len-- > 0) {
 		/* create analytic signal... */
-		c_re(z) = c_im(z) = *buf++;
+		__real__ z = __imag__ z = *buf++;
 
 		filter_run(m->hilbert, z, &z);
 

@@ -27,6 +27,10 @@
 
 #include <glib.h>
 
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
 #ifdef HAVE_DFFTW_H
  #include <dfftw.h>
 #endif

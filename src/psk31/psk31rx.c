@@ -23,6 +23,8 @@
  */
 
 #include <stdio.h>
+#include <complex.h>
+#include <math.h>
 
 #include "psk31.h"
 #include "filter.h"
@@ -89,8 +91,8 @@ static void rx_symbol(struct trx *trx, complex symbol)
 		n = 2;
 	}
 
-	c_re(s->quality) = 0.02 * cos(n * phase) + 0.98 * c_re(s->quality);
-	c_im(s->quality) = 0.02 * sin(n * phase) + 0.98 * c_im(s->quality);
+	__real__ s->quality = 0.02 * cos(n * phase) + 0.98 * creal(s->quality);
+	__imag__ s->quality = 0.02 * sin(n * phase) + 0.98 * cimag(s->quality);
 
 	trx->metric = 100.0 * cpwr(s->quality);
 
@@ -99,14 +101,14 @@ static void rx_symbol(struct trx *trx, complex symbol)
 	switch (s->dcdshreg) {
 	case 0xAAAAAAAA:	/* DCD on by preamble */
 		s->dcd = TRUE;
-		c_re(s->quality) = 1;
-		c_im(s->quality) = 0;
+		__real__ s->quality = 1;
+		__imag__ s->quality = 0;
 		break;
 
 	case 0:			/* DCD off by postamble */
 		s->dcd = FALSE;
-		c_re(s->quality) = 0;
-		c_im(s->quality) = 0;
+		__real__ s->quality = 0;
+		__imag__ s->quality = 0;
 		break;
 
 	default:
@@ -168,8 +170,8 @@ int psk31_rxprocess(struct trx *trx, float *buf, int len)
 
 	while (len-- > 0) {
 		/* Mix with the internal NCO */
-		c_re(z) = *buf * cos(s->phaseacc);
-		c_im(z) = *buf * sin(s->phaseacc);
+		__real__ z = *buf * cos(s->phaseacc);
+		__imag__ z = *buf * sin(s->phaseacc);
 		buf++;
 
 		s->phaseacc += delta;

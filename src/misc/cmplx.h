@@ -147,6 +147,7 @@ extern __inline__ double cpwr(complex x)
 	return (c_re(x) * c_re(x) + c_im(x) * c_im(x));
 }
 
+#ifndef HAVE_CARG
 /*
  * Argument of a complex number.
  */
@@ -154,7 +155,9 @@ extern __inline__ double carg(complex x)
 {
 	return atan2(c_im(x), c_re(x));
 }
+#endif /* !HAVE_CARG */
 
+#ifndef HAVE_CSQRT
 /*
  * Complex square root.
  */
@@ -167,5 +170,6 @@ extern __inline__ complex csqrt(complex x)
 
 	return z;
 }
+#endif /* !HAVE_CSQRT */
 
 #endif

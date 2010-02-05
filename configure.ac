@@ -3,7 +3,7 @@
 AC_PREREQ(2.57)
 
 AC_INIT([gmfsk], [0.7pre1], [oh2bns@sral.fi])
-AC_CONFIG_SRCDIR([configure.in])
+AC_CONFIG_SRCDIR([configure.ac])
 AC_CONFIG_HEADER([config.h])
 AM_INIT_AUTOMAKE
 AM_MAINTAINER_MODE
@@ -42,6 +42,7 @@ fi
 SCROLLKEEPER_BUILD_REQUIRED=0.3.5
 AC_SUBST(SCROLLKEEPER_BUILD_REQUIRED)
 
+pkg_modules="libgnomeui-2.0"
 # Checks for libraries.
 #
 AC_ARG_ENABLE(hamlib,
@@ -51,9 +52,7 @@ AC_ARG_ENABLE(hamlib,
 	      [enable_hamlib=no])
 
 if test "x$enable_hamlib" = "xyes"; then
-	pkg_modules="libgnomeui-2.0 hamlib"
-else
-	pkg_modules="libgnomeui-2.0"
+	pkg_modules+=" hamlib"
 fi
 
 PKG_CHECK_MODULES(PACKAGE, [$pkg_modules])
@@ -77,16 +76,14 @@ AC_CHECK_HEADERS([fcntl.h limits.h stdlib.h string.h sys/ioctl.h unistd.h dfftw.
 AC_C_CONST
 AC_C_INLINE
 AC_STRUCT_TM
-AC_COMPILE_WARNINGS
 
 # Checks for library functions.
 #
 AC_PROG_GCC_TRADITIONAL
 AC_FUNC_STRFTIME
 AC_FUNC_VPRINTF
-AC_C99_FUNC_LRINT
-AC_C99_FUNC_LRINTF
-AC_CHECK_FUNCS([floor ceil fmod memcpy memmove memset pow sqrt strcasecmp strchr strdup strerror strstr mkdir])
+AC_CHECK_LIB([m],[cos])
+AC_CHECK_FUNCS([floor ceil fmod memcpy memmove memset pow sqrt strcasecmp strchr strdup strerror strstr mkdir log2 carg csqrt lrint lrintf])
 
 # Check for this library last so that it doesn't kill checks
 # for the libc functions
@@ -114,4 +111,5 @@ AC_CONFIG_FILES([Makefile
 		 src/samplerate/Makefile
 		 src/throb/Makefile])
 
+CFLAGS=-Werror
 AC_OUTPUT

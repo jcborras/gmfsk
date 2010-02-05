@@ -15,6 +15,8 @@ EXTRA_DIST =		\
 	omf.make	\
 	$(schema_DATA)
 
+DISTCLEANFILES=config.h.in~
+
 schemadir = $(GCONF_SCHEMA_FILE_DIR)
 schema_DATA = gmfsk.schemas
 

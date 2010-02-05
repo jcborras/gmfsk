@@ -23,6 +23,7 @@
  */
 
 #include <stdio.h>
+#include <complex.h>
 
 #include "trx.h"
 #include "rtty.h"
@@ -66,8 +67,8 @@ static inline complex mixer(struct trx *trx, complex in)
 	struct rtty *s = (struct rtty *) trx->modem;
 	complex z;
 
-	c_re(z) = cos(s->phaseacc);
-	c_im(z) = sin(s->phaseacc);
+	__real__ z = cos(s->phaseacc);
+	__imag__ z = sin(s->phaseacc);
 
 	z = cmul(z, in);
 
@@ -199,7 +200,7 @@ int rtty_rxprocess(struct trx *trx, float *buf, int len)
 
 	while (len-- > 0) {
 		/* create analytic signal... */
-		c_re(z) = c_im(z) = *buf++;
+		__real__ z = __imag__ z = *buf++;
 
 		filter_run(s->hilbert, z, &z);
 
