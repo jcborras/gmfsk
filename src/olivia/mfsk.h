@@ -1448,7 +1448,7 @@ class MFSK_Encoder
    void PrintOutputBlock(void)
      { size_t TimeBit;
        for(TimeBit=0; TimeBit<SymbolsPerBlock; TimeBit++)
-       { printf("%2d: ",TimeBit);
+       { printf("%2zd: ",TimeBit);
 	     PrintBinary(OutputBlock[TimeBit],BitsPerSymbol);
 		 printf("\n"); }
      }
@@ -1604,7 +1604,7 @@ class MFSK_HardDecoder
      { size_t TimeBit;
        size_t Ptr=InputPtr;
        for(TimeBit=0; TimeBit<SymbolsPerBlock; TimeBit++)
-       { printf("%2d: ",TimeBit);
+       { printf("%2zd: ",TimeBit);
 	     PrintBinary(InputBuffer[Ptr],BitsPerSymbol);
 		 printf("\n");
 		 Ptr+=1; Ptr&=InputWrap; }
@@ -1956,11 +1956,11 @@ template <class Type=float>
    MFSK_Encoder Encoder;    // FEC encoder
    size_t SymbolPtr;
 
-   MFSK_Modulator<Type> Modulator; // MFSK modulator
+  MFSK_Modulator<Type> Modulator; // MFSK modulator
 
    Type *ModulatorOutput;
 
-   RateConverter<Type> RateConverter; // output rate converter
+  ::RateConverter<Type> RateConverter; // output rate converter
 
    Type *ConverterOutput;
 
@@ -2209,7 +2209,7 @@ template <class Type=float>
 
   private:
 
-   RateConverter<Type> RateConverter;
+  ::RateConverter<Type> RateConverter;
 
    Seq<Type> InputBuffer;
 
