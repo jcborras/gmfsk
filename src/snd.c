@@ -319,6 +319,7 @@ gint sound_open_for_write(gint rate)
 		snd_fd = 1;
 	} else if (strcmp(config.device,"PulseAudio")==0) {
 		pa_sample_spec ss;
+
 		if (config.flags & SND_FLAG_8BIT==SND_FLAG_8BIT)
 			ss.format = PA_SAMPLE_U8;
 		else
@@ -327,6 +328,7 @@ gint sound_open_for_write(gint rate)
 			ss.channels = 2;
 		else
 			ss.channels = 1;
+
 		ss.rate = config.samplerate;
 
 		pas_out = pa_simple_new(
@@ -423,6 +425,7 @@ gint sound_open_for_read(gint rate)
 		snd_fd = 0;
 	} else if (strcmp(config.device,"PulseAudio")==0) {
 		pa_sample_spec ss;
+
 		if (config.flags & SND_FLAG_8BIT==SND_FLAG_8BIT)
 			ss.format = PA_SAMPLE_U8;
 		else
@@ -431,7 +434,18 @@ gint sound_open_for_read(gint rate)
 			ss.channels = 2;
 		else
 			ss.channels = 1;
+
 		ss.rate = config.samplerate;
+
+		pa_buffer_attr attr;
+		attr.maxlength=-1;
+		attr.tlength=-1;
+		attr.prebuf=-1;
+		attr.minreq=-1;
+		/* Work with a tenth of second's worth of data at a time to
+		 * minimize blocking.
+		 */
+		attr.fragsize=ss.channels*config.samplerate/10;
 
 		pas_in = pa_simple_new(
 			NULL,			// Use the default server.
@@ -441,7 +455,7 @@ gint sound_open_for_read(gint rate)
 			"Ham Radio Data",	// Description of our stream.
 			&ss,			// Our sample format.
 			NULL,			// Use default channel map
-			NULL,			// Use default buffering attributes.
+			&attr,
 			NULL			// Ignore error code.
 		);
 	} else if (!(config.flags & SND_FLAG_FULLDUP)) {
