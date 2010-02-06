@@ -33,7 +33,7 @@
 
 extern int cw_tables_init(void);
 
-extern const unsigned char *cw_rx_lookup(const char *r);
+extern const char *cw_rx_lookup(const char *r);
 
 extern unsigned long cw_tx_lookup(unsigned char c);
 

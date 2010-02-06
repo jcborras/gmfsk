@@ -22,8 +22,8 @@
  *
  */
 
-#ifndef _COMPLEX_H
-#define _COMPLEX_H
+#ifndef _CMPLX_H
+#define _CMPLX_H
 
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
@@ -32,6 +32,7 @@
 #include <glib.h>
 #include <math.h>
 
+#include <complex.h>
 #ifdef HAVE_DFFTW_H
   #include <dfftw.h>
 #endif
@@ -39,14 +40,12 @@
   #include <fftw.h>
 #endif
 
-typedef fftw_complex complex;
-
 /*
  * Complex multiplication.
  */
-extern __inline__ complex cmul(complex x, complex y)
+extern __inline__ fftw_complex cmul(fftw_complex x, fftw_complex y)
 {
-	complex z;
+	fftw_complex z;
 
 	c_re(z) = c_re(x) * c_re(y) - c_im(x) * c_im(y);
 	c_im(z) = c_re(x) * c_im(y) + c_im(x) * c_re(y);
@@ -57,9 +56,9 @@ extern __inline__ complex cmul(complex x, complex y)
 /*
  * Complex addition.
  */
-extern __inline__ complex cadd(complex x, complex y)
+extern __inline__ fftw_complex cadd(fftw_complex x, fftw_complex y)
 {
-	complex z;
+	fftw_complex z;
 
 	c_re(z) = c_re(x) + c_re(y);
 	c_im(z) = c_im(x) + c_im(y);
@@ -70,9 +69,9 @@ extern __inline__ complex cadd(complex x, complex y)
 /*
  * Complex subtraction.
  */
-extern __inline__ complex csub(complex x, complex y)
+extern __inline__ fftw_complex csub(fftw_complex x, fftw_complex y)
 {
-	complex z;
+	fftw_complex z;
 
 	c_re(z) = c_re(x) - c_re(y);
 	c_im(z) = c_im(x) - c_im(y);
@@ -83,9 +82,9 @@ extern __inline__ complex csub(complex x, complex y)
 /*
  * Complex multiply-accumulate.
  */
-extern __inline__ complex cmac(complex *a, complex *b, gint ptr, gint len)
+extern __inline__ fftw_complex cmac(fftw_complex *a, fftw_complex *b, gint ptr, gint len)
 {
-	complex z;
+	fftw_complex z;
 	int i;
 
 	c_re(z) = 0.0;
@@ -105,9 +104,9 @@ extern __inline__ complex cmac(complex *a, complex *b, gint ptr, gint len)
  * Complex ... yeah, what??? Returns a complex number that has the
  * properties: |z| = |x| * |y|  and  arg(z) = arg(y) - arg(x)
  */
-extern __inline__ complex ccor(complex x, complex y)
+extern __inline__ fftw_complex ccor(fftw_complex x, fftw_complex y)
 {
-	complex z;
+	fftw_complex z;
 
 	c_re(z) = c_re(x) * c_re(y) + c_im(x) * c_im(y);
 	c_im(z) = c_re(x) * c_im(y) - c_im(x) * c_re(y);
@@ -118,7 +117,7 @@ extern __inline__ complex ccor(complex x, complex y)
 /*
  * Real part of the complex ???
  */
-extern __inline__ double ccorI(complex x, complex y)
+extern __inline__ double ccorI(fftw_complex x, fftw_complex y)
 {
 	return c_re(x) * c_re(y) + c_im(x) * c_im(y);
 }
@@ -126,7 +125,7 @@ extern __inline__ double ccorI(complex x, complex y)
 /*
  * Imaginary part of the complex ???
  */
-extern __inline__ double ccorQ(complex x, complex y)
+extern __inline__ double ccorQ(fftw_complex x, fftw_complex y)
 {
 	return c_re(x) * c_im(y) - c_im(x) * c_re(y);
 }
@@ -134,7 +133,7 @@ extern __inline__ double ccorQ(complex x, complex y)
 /*
  * Modulo (absolute value) of a complex number.
  */
-extern __inline__ double cmod(complex x)
+extern __inline__ double cmod(fftw_complex x)
 {
 	return sqrt(c_re(x) * c_re(x) + c_im(x) * c_im(x));
 }
@@ -142,34 +141,30 @@ extern __inline__ double cmod(complex x)
 /*
  * Square of the absolute value (power).
  */
-extern __inline__ double cpwr(complex x)
+extern __inline__ double cpwr(fftw_complex x)
 {
 	return (c_re(x) * c_re(x) + c_im(x) * c_im(x));
 }
 
-#ifndef HAVE_CARG
 /*
  * Argument of a complex number.
  */
-extern __inline__ double carg(complex x)
+extern __inline__ double carg_fftw(fftw_complex x)
 {
 	return atan2(c_im(x), c_re(x));
 }
-#endif /* !HAVE_CARG */
 
-#ifndef HAVE_CSQRT
 /*
  * Complex square root.
  */
-extern __inline__ complex csqrt(complex x)
+extern __inline__ fftw_complex csqrt_fftw(fftw_complex x)
 {
-	complex z;
+	fftw_complex z;
 
 	c_re(z) = sqrt(cmod(x) + c_re(x)) / M_SQRT2;
 	c_im(z) = c_im(x) / c_re(z) / 2;
 
 	return z;
 }
-#endif /* !HAVE_CSQRT */
 
 #endif

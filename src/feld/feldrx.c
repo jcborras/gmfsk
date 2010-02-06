@@ -22,6 +22,14 @@
  *
  */
 
+#include <complex.h>
+#ifdef HAVE_DFFTW_H
+  #include <dfftw.h>
+#endif
+#ifdef HAVE_FFTW_H
+  #include <fftw.h>
+#endif
+
 #include "trx.h"
 #include "feld.h"
 #include "filter.h"
@@ -33,10 +41,10 @@
 #undef  CLAMP
 #define CLAMP(x,low,high)	(((x)>(high))?(high):(((x)<(low))?(low):(x)))
 
-static inline complex mixer(struct trx *trx, complex in)
+static inline fftw_complex mixer(struct trx *trx, fftw_complex in)
 {
 	struct feld *s = (struct feld *) trx->modem;
-	complex z;
+	fftw_complex z;
 
 	c_re(z) = cos(s->rxphacc);
 	c_im(z) = sin(s->rxphacc);
@@ -53,7 +61,7 @@ static inline complex mixer(struct trx *trx, complex in)
 	return z;
 }
 
-static void feld_rx(struct trx *trx, complex z)
+static void feld_rx(struct trx *trx, fftw_complex z)
 {
 	struct feld *s = (struct feld *) trx->modem;
 	double x;
@@ -81,7 +89,7 @@ static void feld_rx(struct trx *trx, complex z)
 int feld_rxprocess(struct trx *trx, float *buf, int len)
 {
 	struct feld *s = (struct feld *) trx->modem;
-	complex z, *zp;
+	fftw_complex z, *zp;
 	int i, n;
 
 	if (trx->bandwidth != trx->hell_bandwidth) {

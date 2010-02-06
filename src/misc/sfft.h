@@ -26,6 +26,13 @@
 #define _SFFT_H
 
 #include <glib.h>
+#include <complex.h>
+#ifdef HAVE_DFFTW_H
+  #include <dfftw.h>
+#endif
+#ifdef HAVE_FFTW_H
+  #include <fftw.h>
+#endif
 
 #include "cmplx.h"
 
@@ -34,15 +41,15 @@ struct sfft {
 	gint first;
 	gint last;
 	gint ptr;
-	complex *twiddles;
-	complex *bins;
-	complex *history;
+	fftw_complex *twiddles;
+	fftw_complex *bins;
+	fftw_complex *history;
 	gdouble corr;
 };
 
 extern struct sfft *sfft_init(gint, gint, gint);
 extern void sfft_free(struct sfft *);
 
-extern complex *sfft_run(struct sfft *, complex);
+extern fftw_complex *sfft_run(struct sfft *, fftw_complex);
 
 #endif

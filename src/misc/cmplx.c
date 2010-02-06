@@ -27,9 +27,9 @@
 /*
  * Complex multiplication.
  */
-complex cmul(complex x, complex y)
+fftw_complex cmul(fftw_complex x, fftw_complex y)
 {
-	complex z;
+	fftw_complex z;
 
 	c_re(z) = c_re(x) * c_re(y) - c_im(x) * c_im(y);
 	c_im(z) = c_re(x) * c_im(y) + c_im(x) * c_re(y);
@@ -40,9 +40,9 @@ complex cmul(complex x, complex y)
 /*
  * Complex addition.
  */
-complex cadd(complex x, complex y)
+fftw_complex cadd(fftw_complex x, fftw_complex y)
 {
-	complex z;
+	fftw_complex z;
 
 	c_re(z) = c_re(x) + c_re(y);
 	c_im(z) = c_im(x) + c_im(y);
@@ -53,9 +53,9 @@ complex cadd(complex x, complex y)
 /*
  * Complex subtraction.
  */
-complex csub(complex x, complex y)
+fftw_complex csub(fftw_complex x, fftw_complex y)
 {
-	complex z;
+	fftw_complex z;
 
 	c_re(z) = c_re(x) - c_re(y);
 	c_im(z) = c_im(x) - c_im(y);
@@ -66,9 +66,9 @@ complex csub(complex x, complex y)
 /*
  * Complex multiply-accumulate.
  */
-complex cmac(complex *a, complex *b, int ptr, int len)
+fftw_complex cmac(fftw_complex *a, fftw_complex *b, int ptr, int len)
 {
-	complex z;
+	fftw_complex z;
 	int i;
 
 	c_re(z) = 0.0;
@@ -88,9 +88,9 @@ complex cmac(complex *a, complex *b, int ptr, int len)
  * Complex ... yeah, what??? Returns a complex number that has the
  * properties: |z| = |x| * |y|  and  arg(z) = arg(y) - arg(x)
  */
-complex ccor(complex x, complex y)
+fftw_complex ccor(fftw_complex x, fftw_complex y)
 {
-	complex z;
+	fftw_complex z;
 
 	c_re(z) = c_re(x) * c_re(y) + c_im(x) * c_im(y);
 	c_im(z) = c_re(x) * c_im(y) - c_im(x) * c_re(y);
@@ -101,7 +101,7 @@ complex ccor(complex x, complex y)
 /*
  * Real part of the complex ???
  */
-double ccorI(complex x, complex y)
+double ccorI(fftw_complex x, fftw_complex y)
 {
 	return c_re(x) * c_re(y) + c_im(x) * c_im(y);
 }
@@ -109,7 +109,7 @@ double ccorI(complex x, complex y)
 /*
  * Imaginary part of the complex ???
  */
-double ccorQ(complex x, complex y)
+double ccorQ(fftw_complex x, fftw_complex y)
 {
 	return c_re(x) * c_im(y) - c_im(x) * c_re(y);
 }
@@ -117,7 +117,7 @@ double ccorQ(complex x, complex y)
 /*
  * Modulo (absolute value) of a complex number.
  */
-double cmod(complex x)
+double cmod(fftw_complex x)
 {
 	return sqrt(c_re(x) * c_re(x) + c_im(x) * c_im(x));
 }
@@ -125,32 +125,28 @@ double cmod(complex x)
 /*
  * Square of the absolute value (power).
  */
-double cpwr(complex x)
+double cpwr(fftw_complex x)
 {
 	return (c_re(x) * c_re(x) + c_im(x) * c_im(x));
 }
 
-#ifndef HAVE_CARG
 /*
  * Argument of a complex number.
  */
-double carg(complex x)
+double carg_fftw(fftw_complex x)
 {
 	return atan2(c_im(x), c_re(x));
 }
-#endif /* !HAVE_CARG */
 
-#ifndef HAVE_CSQRT
 /*
  * Complex square root.
  */
-complex csqrt(complex x)
+fftw_complex csqrt_fftw(fftw_complex x)
 {
-	complex z;
+	fftw_complex z;
 
 	c_re(z) = sqrt(cmod(x) + c_re(x)) / M_SQRT2;
 	c_im(z) = c_im(x) / c_re(z) / 2;
 
 	return z;
 }
-#endif /* !HAVE_CSQRT */

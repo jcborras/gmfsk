@@ -26,6 +26,13 @@
 #define _FILTER_H
 
 #include <glib.h>
+#include <complex.h>
+#ifdef HAVE_DFFTW_H
+  #include <dfftw.h>
+#endif
+#ifdef HAVE_FFTW_H
+  #include <fftw.h>
+#endif
 
 #include "cmplx.h"
 
@@ -76,7 +83,7 @@ extern struct filter *filter_init_bandpass(gint len, gint dec, gfloat f1, gfloat
 extern struct filter *filter_init_hilbert(gint len, gint dec);
 extern void filter_free(struct filter *f);
 
-extern gint filter_run(struct filter *f, complex in, complex *out);
+extern gint filter_run(struct filter *f, fftw_complex in, fftw_complex *out);
 extern gint filter_I_run(struct filter *f, gfloat in, gfloat *out);
 extern gint filter_Q_run(struct filter *f, gfloat in, gfloat *out);
 

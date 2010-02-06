@@ -25,6 +25,12 @@
 #include <stdio.h>
 #include <string.h>
 #include <complex.h>
+#ifdef HAVE_DFFTW_H
+  #include <dfftw.h>
+#endif
+#ifdef HAVE_FFTW_H
+  #include <fftw.h>
+#endif
 
 #include "trx.h"
 #include "throb.h"
@@ -34,14 +40,14 @@
 #include "fft.h"
 #include "fftfilt.h"
 
-static inline complex mixer(struct trx *trx, complex in)
+static inline fftw_complex mixer(struct trx *trx, fftw_complex in)
 {
 	struct throb *s = (struct throb *) trx->modem;
-	complex z;
+	fftw_complex z;
 	float f;
 
-	__real__ z = cos(s->phaseacc);
-	__imag__ z = sin(s->phaseacc);
+	c_re(z) = cos(s->phaseacc);
+	c_im(z) = sin(s->phaseacc);
 
 	z = cmul(z, in);
 
@@ -57,7 +63,7 @@ static inline complex mixer(struct trx *trx, complex in)
 	return z;
 }
 
-static int findtones(complex *word, int *tone1, int *tone2)
+static int findtones(fftw_complex *word, int *tone1, int *tone2)
 {
 	double max1, max2;
 	int maxtone, i;
@@ -134,10 +140,10 @@ static void decodechar(struct trx *trx, int tone1, int tone2)
 	return;
 }
 
-static void throb_rx(struct trx *trx, complex in)
+static void throb_rx(struct trx *trx, fftw_complex in)
 {
 	struct throb *s = (struct throb *) trx->modem;
-	complex rxword[NumTones];
+	fftw_complex rxword[NumTones];
 	int i, tone1, tone2, maxtone;
 
 	/* store input */
@@ -158,13 +164,13 @@ static void throb_rx(struct trx *trx, complex in)
 	decodechar(trx, tone1, tone2);
 
 	if (trx->afcon == TRUE) {
-		complex z1, z2;
+		fftw_complex z1, z2;
 		double f;
 
 		z1 = rxword[maxtone];
 		z2 = cmac(s->rxtone[maxtone], s->symbol, s->symptr + 2, s->rxsymlen);
 
-		f = carg(ccor(z1, z2)) / (2 * DownSample * M_PI / SampleRate);
+		f = carg_fftw(ccor(z1, z2)) / (2 * DownSample * M_PI / SampleRate);
 		f -= s->freqs[maxtone];
 
 		trx_set_freq(trx->frequency + f / 8.0);
@@ -175,7 +181,7 @@ static void throb_rx(struct trx *trx, complex in)
 	s->waitsync = 1;
 }
 
-static void throb_sync(struct trx *trx, complex in)
+static void throb_sync(struct trx *trx, fftw_complex in)
 {
 	struct throb *s = (struct throb *) trx->modem;
 	float f, maxval = 0;
@@ -211,12 +217,12 @@ static void throb_sync(struct trx *trx, complex in)
 int throb_rxprocess(struct trx *trx, float *buf, int len)
 {
 	struct throb *s = (struct throb *) trx->modem;
-	complex z, *zp;
+	fftw_complex z, *zp;
 	int i, n;
 
 	while (len-- > 0) {
 		/* create analytic signal */
-		__real__ z = __imag__ z = *buf++;
+		c_re(z) = c_im(z) = *buf++;
 
 		filter_run(s->hilbert, z, &z);
 

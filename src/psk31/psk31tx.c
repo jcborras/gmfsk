@@ -23,6 +23,13 @@
  */
 
 #include <ctype.h>
+#include <complex.h>
+#ifdef HAVE_DFFTW_H
+  #include <dfftw.h>
+#endif
+#ifdef HAVE_FFTW_H
+  #include <fftw.h>
+#endif
 
 #include "psk31.h"
 #include "varicode.h"
@@ -32,7 +39,7 @@ static void send_symbol(struct trx *trx, int sym)
 {
 	struct psk31 *s = (struct psk31 *) trx->modem;
 	float delta;
-	complex symbol;
+	fftw_complex symbol;
 	int i;
 
 	if (s->qpsk && trx->reverse)

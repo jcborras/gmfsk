@@ -43,8 +43,14 @@ char *alloca ();
 
 #include <stdlib.h>
 #include <string.h>
-#include <complex.h>
 #include <ctype.h>
+#include <complex.h>
+#ifdef HAVE_DFFTW_H
+  #include <dfftw.h>
+#endif
+#ifdef HAVE_FFTW_H
+  #include <fftw.h>
+#endif
 
 #include "mfsk.h"
 #include "filter.h"
@@ -52,12 +58,13 @@ char *alloca ();
 #include "varicode.h"
 #include "misc.h"
 #include "picture.h"
+#include "../misc/cmplx.h"
 
-static void recvpic(struct trx *trx, complex z)
+static void recvpic(struct trx *trx, fftw_complex z)
 {
 	struct mfsk *m = (struct mfsk *) trx->modem;
 
-	m->picf += carg(ccor(m->prevz, z)) * SampleRate / (2.0 * M_PI);
+	m->picf += carg_fftw(ccor(m->prevz, z)) * SampleRate / (2.0 * M_PI);
 	m->prevz = z;
 
 	if ((m->counter % SAMPLES_PER_PIXEL) == 0) {
@@ -165,7 +172,7 @@ static void decodesymbol(struct trx *trx, unsigned char symbol)
 //		m->met1, m->met2, m->met1 > m->met2 ? 1 : 2);
 }
 
-static void softdecode(struct trx *trx, complex *bins)
+static void softdecode(struct trx *trx, fftw_complex *bins)
 {
 	struct mfsk *m = (struct mfsk *) trx->modem;
 	float tone, sum, *b;
@@ -214,10 +221,10 @@ static void softdecode(struct trx *trx, complex *bins)
 	}
 }
 
-static complex mixer(struct trx *trx, complex in)
+static fftw_complex mixer(struct trx *trx, fftw_complex in)
 {
 	struct mfsk *m = (struct mfsk *) trx->modem;
-	complex z;
+	fftw_complex z;
 	float f;
 
 	f = trx->frequency - trx->bandwidth / 2;
@@ -225,8 +232,8 @@ static complex mixer(struct trx *trx, complex in)
 	/* Basetone is always 1000 Hz */
 	f -= 1000.0;
 
-	__real__ z = cos(m->phaseacc);
-	__imag__ z = sin(m->phaseacc);
+	c_re(z) = cos(m->phaseacc);
+	c_im(z) = sin(m->phaseacc);
 
 	z = cmul(z, in);
 
@@ -240,7 +247,7 @@ static complex mixer(struct trx *trx, complex in)
 	return z;
 }
 
-static int harddecode(struct trx *trx, complex *in)
+static int harddecode(struct trx *trx, fftw_complex *in)
 {
 	struct mfsk *m = (struct mfsk *) trx->modem;
 	double x, max = 0.0;
@@ -302,7 +309,7 @@ static void synchronize(struct mfsk *m)
 static void afc(struct trx *trx)
 {
 	struct mfsk *m = (struct mfsk *) trx->modem;
-	complex z;
+	fftw_complex z;
 	float x;
 
 	if (trx->afcon == FALSE || trx->metric < trx->mfsk_squelch)
@@ -312,7 +319,7 @@ static void afc(struct trx *trx)
 		return;
 
 	z = ccor(m->prev1vector, m->currvector);
-	x = carg(z) / m->symlen / (2.0 * M_PI / SampleRate);
+	x = carg_fftw(z) / m->symlen / (2.0 * M_PI / SampleRate);
 
 	if (x > -m->tonespacing / 2.0 &&  x < m->tonespacing / 2.0)
 		trx_set_freq(trx->frequency + (x / 8.0));
@@ -321,12 +328,12 @@ static void afc(struct trx *trx)
 int mfsk_rxprocess(struct trx *trx, float *buf, int len)
 {
 	struct mfsk *m = (struct mfsk *) trx->modem;
-	complex z, *bins;
+	fftw_complex z, *bins;
 	int i;
 
 	while (len-- > 0) {
 		/* create analytic signal... */
-		__real__ z = __imag__ z = *buf++;
+		c_re(z) = c_im(z) = *buf++;
 
 		filter_run(m->hilbert, z, &z);
 

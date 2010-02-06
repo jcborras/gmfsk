@@ -24,6 +24,12 @@
 
 #include <stdio.h>
 #include <complex.h>
+#ifdef HAVE_DFFTW_H
+  #include <dfftw.h>
+#endif
+#ifdef HAVE_FFTW_H
+  #include <fftw.h>
+#endif
 
 #include "trx.h"
 #include "rtty.h"
@@ -62,13 +68,13 @@ static void update_syncscope(struct rtty *s)
 	trx_set_scope(data, s->symbollen, FALSE);
 }
 
-static inline complex mixer(struct trx *trx, complex in)
+static inline fftw_complex mixer(struct trx *trx, fftw_complex in)
 {
 	struct rtty *s = (struct rtty *) trx->modem;
-	complex z;
+	fftw_complex z;
 
-	__real__ z = cos(s->phaseacc);
-	__imag__ z = sin(s->phaseacc);
+	c_re(z) = cos(s->phaseacc);
+	c_im(z) = sin(s->phaseacc);
 
 	z = cmul(z, in);
 
@@ -192,7 +198,7 @@ static int rttyrx(struct rtty *s, int bit)
 int rtty_rxprocess(struct trx *trx, float *buf, int len)
 {
 	struct rtty *s = (struct rtty *) trx->modem;
-	complex z, *zp;
+	fftw_complex z, *zp;
 	int n, i, bit, rev;
 	double f;
 
@@ -200,7 +206,7 @@ int rtty_rxprocess(struct trx *trx, float *buf, int len)
 
 	while (len-- > 0) {
 		/* create analytic signal... */
-		__real__ z = __imag__ z = *buf++;
+		c_re(z) = c_im(z) = *buf++;
 
 		filter_run(s->hilbert, z, &z);
 
@@ -210,9 +216,9 @@ int rtty_rxprocess(struct trx *trx, float *buf, int len)
 		n = fftfilt_run(s->fftfilt, z, &zp);
 
 		for (i = 0; i < n; i++) {
-			static complex prev;
+			static fftw_complex prev;
 
-			f = carg(ccor(prev, zp[i])) * SampleRate / (2 * M_PI);
+			f = carg_fftw(ccor(prev, zp[i])) * SampleRate / (2 * M_PI);
 			prev = zp[i];
 
 			f = bbfilt(s, f);

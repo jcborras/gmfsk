@@ -30,6 +30,13 @@
 #include <string.h>
 #include <time.h>
 #include <errno.h>
+#include <complex.h>
+#ifdef HAVE_DFFTW_H
+  #include <dfftw.h>
+#endif
+#ifdef HAVE_FFTW_H
+  #include <fftw.h>
+#endif
 
 #include "trx.h"
 #include "cw.h"
@@ -38,7 +45,7 @@
 #include "fftfilt.h"
 #include "misc.h"
 
-static int cw_process(struct trx *trx, int cw_event, unsigned char **c);
+static int cw_process(struct trx *trx, int cw_event, char **c);
 
 /*
 =======================================================================
@@ -73,11 +80,11 @@ static void update_syncscope(struct cw *s)
 int cw_rxprocess(struct trx *trx, float *buf, int len)
 {
 	struct cw *s = (struct cw *) trx->modem;
-	complex z, *zp;
+	fftw_complex z, *zp;
 	int n, i;
 	double delta;
 	double value;
-	unsigned char *c;
+	char *c;
 
 	/* check if user changed filter bandwidth */
 	if (trx->bandwidth != trx->cw_bandwidth) {
@@ -243,7 +250,7 @@ cw_process()
     If there is no data ready, CW_ERROR is returned.
 =======================================================================
 */
-static int cw_process(struct trx *trx, int cw_event, unsigned char **c)
+static int cw_process(struct trx *trx, int cw_event, char **c)
 {
 	struct cw *s = (struct cw *) trx->modem;
 	static int space_sent = TRUE;	// for word space logic
@@ -390,7 +397,7 @@ static int cw_process(struct trx *trx, int cw_event, unsigned char **c)
 		    element_usec <= (4 * s->cw_receive_dot_length) &&
 		    s->cw_receive_state == RS_AFTER_TONE) {
 			/* Look up the representation */
-			*c = (unsigned char*) cw_rx_lookup(s->cw_receive_representation_buffer);
+			*c = (char *) cw_rx_lookup(s->cw_receive_representation_buffer);
 
 			if (*c == NULL)
 				// invalid decode... let user see error

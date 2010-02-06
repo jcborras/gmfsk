@@ -52,8 +52,8 @@ struct fftfilt *fftfilt_init(gdouble f1, gdouble f2, gint len)
 		return NULL;
 	}
 
-	s->ovlbuf = g_new0(complex, len / 2);
-	s->filter = g_new0(complex, len);
+	s->ovlbuf = g_new0(fftw_complex, len / 2);
+	s->filter = g_new0(fftw_complex, len);
 
 	s->filterlen = len;
 	s->inptr = 0;
@@ -117,7 +117,7 @@ void fftfilt_set_freqs(struct fftfilt *s, gdouble f1, gdouble f2)
 /*
  * Filter with fast convolution (overlap-add algorithm).
  */
-gint fftfilt_run(struct fftfilt *s, complex in, complex **out)
+gint fftfilt_run(struct fftfilt *s, fftw_complex in, fftw_complex **out)
 {
 	gint i;
 

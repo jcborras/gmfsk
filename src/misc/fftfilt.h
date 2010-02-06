@@ -27,6 +27,14 @@
 
 #include <glib.h>
 
+#include <complex.h>
+#ifdef HAVE_DFFTW_H
+  #include <dfftw.h>
+#endif
+#ifdef HAVE_FFTW_H
+  #include <fftw.h>
+#endif
+
 #include "cmplx.h"
 #include "fft.h"
 
@@ -39,11 +47,11 @@ struct fftfilt {
         struct fft *ift;
         struct fft *tmpfft;
 
-	complex *filter;
+	fftw_complex *filter;
 
 	gint inptr;
 
-	complex *ovlbuf;
+	fftw_complex *ovlbuf;
 };
 
 /* ---------------------------------------------------------------------- */
@@ -53,7 +61,7 @@ extern void fftfilt_free(struct fftfilt *s);
 
 extern void fftfilt_set_freqs(struct fftfilt *s, gdouble f1, gdouble f2);
 
-extern gint fftfilt_run(struct fftfilt *, complex in, complex **out);
+extern gint fftfilt_run(struct fftfilt *, fftw_complex in, fftw_complex **out);
 
 /* ---------------------------------------------------------------------- */
 

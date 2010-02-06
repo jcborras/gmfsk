@@ -200,7 +200,7 @@ void filter_free(struct filter *f)
 
 /* ---------------------------------------------------------------------- */
 
-gint filter_run(struct filter *f, complex in, complex *out)
+gint filter_run(struct filter *f, fftw_complex in, fftw_complex *out)
 {
 	gfloat *iptr = f->ibuffer + f->pointer;
 	gfloat *qptr = f->qbuffer + f->pointer;

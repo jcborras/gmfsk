@@ -25,6 +25,14 @@
 #ifndef _THROB_H
 #define _THROB_H
 
+#include <complex.h>
+#ifdef HAVE_DFFTW_H
+  #include <dfftw.h>
+#endif
+#ifdef HAVE_FFTW_H
+  #include <fftw.h>
+#endif
+
 #include "cmplx.h"
 #include "trx.h"
 
@@ -57,8 +65,8 @@ struct throb {
 	struct fftfilt *fftfilt;
 	struct filter *syncfilt;
 
-	complex *rxtone[NumTones];
-	complex symbol[MaxRxSymLen];
+	fftw_complex *rxtone[NumTones];
+	fftw_complex symbol[MaxRxSymLen];
 
 	float syncbuf[MaxRxSymLen];
 	float dispbuf[MaxRxSymLen];

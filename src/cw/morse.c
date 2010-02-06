@@ -47,9 +47,9 @@
 #define	CW_ENTRY_EXTENDED	1
 
 typedef struct {
-	const unsigned char *chr;	/* The character(s) represented */
-	const unsigned char *rpr;	/* Dot-dash shape of the character */
-	const int type;			/* Type of the entry */
+	const char *chr;	/* The character(s) represented */
+	const char *rpr;	/* Dot-dash shape of the character */
+	const int type;		/* Type of the entry */
 } cw_table_entry;
 
 static cw_table_entry cw_table[] = {
@@ -216,7 +216,7 @@ int cw_tables_init(void)
 {
 	cw_table_entry *cw;	/* Pointer to table entry */
 	unsigned int i;
-	const unsigned char *p;
+	const char *p;
 	long code;
 	int len;
 
@@ -254,7 +254,7 @@ int cw_tables_init(void)
 		}
 
 		for (p = cw->chr; *p != 0; p++)
-			cw_tx_lookup_table[*p] = code;
+			cw_tx_lookup_table[(unsigned char)*p] = code;
 	}
 
 #if 0
@@ -270,9 +270,9 @@ int cw_tables_init(void)
 	return TRUE;
 }
 
-const unsigned char *cw_rx_lookup(const char *r)
+const char *cw_rx_lookup(const char *r)
 {
-	static unsigned char chr[2];	/* FIXME */
+	static char chr[2];	/* FIXME */
 	unsigned char token;
 	cw_table_entry *cw;		/* Pointer to table entry */
 

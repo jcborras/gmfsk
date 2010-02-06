@@ -24,6 +24,13 @@
 
 #include <stdlib.h>
 #include <math.h>
+#include <complex.h>
+#ifdef HAVE_DFFTW_H
+  #include <dfftw.h>
+#endif
+#ifdef HAVE_FFTW_H
+  #include <fftw.h>
+#endif
 
 #include "sfft.h"
 #include "misc.h"
@@ -39,9 +46,9 @@ struct sfft *sfft_init(gint len, gint first, gint last)
 
 	s = g_new0(struct sfft, 1);
 
-	s->twiddles = g_new0(complex, len);
-	s->history  = g_new0(complex, len);
-	s->bins     = g_new0(complex, len);
+	s->twiddles = g_new0(fftw_complex, len);
+	s->history  = g_new0(fftw_complex, len);
+	s->bins     = g_new0(fftw_complex, len);
 
 	s->fftlen = len;
 	s->first = first;
@@ -68,11 +75,11 @@ void sfft_free(struct sfft *s)
 }
 
 /*
- * Sliding FFT, complex input, complex output
+ * Sliding FFT, fftw_complex input, fftw_complex output
  */
-complex *sfft_run(struct sfft *s, complex new)
+fftw_complex *sfft_run(struct sfft *s, fftw_complex new)
 {
-	complex old, z;
+	fftw_complex old, z;
 	gint i;
 
 	/* restore the sample fftlen samples back */

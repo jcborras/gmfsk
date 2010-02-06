@@ -57,7 +57,7 @@ AC_PROG_GCC_TRADITIONAL
 AC_FUNC_STRFTIME
 AC_FUNC_VPRINTF
 AC_CHECK_LIB([m],[cos])
-AC_CHECK_FUNCS([floor ceil fmod memcpy memmove memset pow sqrt strcasecmp strchr strdup strerror strstr mkdir log2 carg csqrt lrint lrintf])
+AC_CHECK_FUNCS([floor ceil fmod memcpy memmove memset pow sqrt strcasecmp strchr strdup strerror strstr mkdir log2 lrint lrintf])
 
 PKG_CHECK_MODULES(gnomeui_2, [libgnomeui-2.0])
 PKG_CHECK_MODULES(pulse_simple, [libpulse-simple],[AC_DEFINE([HAVE_PULSE_SIMPLE],[1],[Use PulseAudio])],[AC_MSG_NOTICE([libpulse-simple not found])])

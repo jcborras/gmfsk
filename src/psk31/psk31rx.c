@@ -24,6 +24,12 @@
 
 #include <stdio.h>
 #include <complex.h>
+#ifdef HAVE_DFFTW_H
+  #include <dfftw.h>
+#endif
+#ifdef HAVE_FFTW_H
+  #include <fftw.h>
+#endif
 #include <math.h>
 
 #include "psk31.h"
@@ -74,13 +80,13 @@ static void rx_qpsk(struct trx *trx, int bits)
 	}
 }
 
-static void rx_symbol(struct trx *trx, complex symbol)
+static void rx_symbol(struct trx *trx, fftw_complex symbol)
 {
 	struct psk31 *s = (struct psk31 *) trx->modem;
 	double phase, error;
 	int bits, n;
 
-	if ((phase = carg(ccor(s->prevsymbol, symbol))) < 0)
+	if ((phase = carg_fftw(ccor(s->prevsymbol, symbol))) < 0)
 		phase += 2 * M_PI;
 
 	if (s->qpsk) {
@@ -91,8 +97,8 @@ static void rx_symbol(struct trx *trx, complex symbol)
 		n = 2;
 	}
 
-	__real__ s->quality = 0.02 * cos(n * phase) + 0.98 * creal(s->quality);
-	__imag__ s->quality = 0.02 * sin(n * phase) + 0.98 * cimag(s->quality);
+	c_re(s->quality) = 0.02 * cos(n * phase) + 0.98 * c_re(s->quality);
+	c_im(s->quality) = 0.02 * sin(n * phase) + 0.98 * c_im(s->quality);
 
 	trx->metric = 100.0 * cpwr(s->quality);
 
@@ -101,14 +107,14 @@ static void rx_symbol(struct trx *trx, complex symbol)
 	switch (s->dcdshreg) {
 	case 0xAAAAAAAA:	/* DCD on by preamble */
 		s->dcd = TRUE;
-		__real__ s->quality = 1;
-		__imag__ s->quality = 0;
+		c_re(s->quality) = 1;
+		c_im(s->quality) = 0;
 		break;
 
 	case 0:			/* DCD off by postamble */
 		s->dcd = FALSE;
-		__real__ s->quality = 0;
-		__imag__ s->quality = 0;
+		c_re(s->quality) = 0;
+		c_im(s->quality) = 0;
 		break;
 
 	default:
@@ -163,15 +169,15 @@ int psk31_rxprocess(struct trx *trx, float *buf, int len)
 {
 	struct psk31 *s = (struct psk31 *) trx->modem;
 	double delta;
-	complex z;
+	fftw_complex z;
 	int i;
 
 	delta = 2.0 * M_PI * trx->frequency / SampleRate;
 
 	while (len-- > 0) {
 		/* Mix with the internal NCO */
-		__real__ z = *buf * cos(s->phaseacc);
-		__imag__ z = *buf * sin(s->phaseacc);
+		c_re(z) = *buf * cos(s->phaseacc);
+		c_im(z) = *buf * sin(s->phaseacc);
 		buf++;
 
 		s->phaseacc += delta;

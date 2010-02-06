@@ -41,7 +41,7 @@
 #define	POLY2	0x4f
 
 struct rxpipe {
-	complex vector[32];	/* numtones <= 32 */
+	fftw_complex vector[32];	/* numtones <= 32 */
 	int symbol;
 };
 
@@ -78,9 +78,9 @@ struct mfsk {
 
 	unsigned int datashreg;
 
-	complex currvector;
-	complex prev1vector;
-	complex prev2vector;
+	fftw_complex currvector;
+	fftw_complex prev1vector;
+	fftw_complex prev2vector;
 
 	int currsymbol;
 	int prev1symbol;
@@ -96,7 +96,7 @@ struct mfsk {
 
 	int picturesize;
 	char picheader[16];
-	complex prevz;
+	fftw_complex prevz;
 	double picf;
 
 	int symbolbit;

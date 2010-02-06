@@ -28,7 +28,7 @@
  * The IZ8BLY MFSK Varicode as defined in
  *   http://www.qsl.net/zl1bpu/MFSK/Varicode.html
  */
-static unsigned char *varicode[] = {
+static char *varicode[] = {
 	"11101011100",		/* 000 - <NUL>	*/
 	"11101100000",		/* 001 - <SOH>	*/
 	"11101101000",		/* 002 - <STX>	*/
@@ -325,7 +325,7 @@ static unsigned int varidecode[] = {
 	0x6F4, 0x6F8, 0x6FC, 0x700, 0x740, 0x750, 0x754, 0x758
 };
 
-unsigned char *varienc(unsigned char c)
+char *varienc(unsigned char c)
 {
 	return varicode[c];
 }

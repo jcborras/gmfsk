@@ -25,6 +25,14 @@
 #ifndef _PSK31_H
 #define _PSK31_H
 
+#include <complex.h>
+#ifdef HAVE_DFFTW_H
+  #include <dfftw.h>
+#endif
+#ifdef HAVE_FFTW_H
+  #include <fftw.h>
+#endif
+
 #include "cmplx.h"
 #include "trx.h"
 #include "viterbi.h"
@@ -40,7 +48,7 @@ struct psk31 {
 	int qpsk;
 
 	double phaseacc;
-	complex prevsymbol;
+	fftw_complex prevsymbol;
 	unsigned int shreg;
 
 	/*
@@ -61,7 +69,7 @@ struct psk31 {
 	unsigned int dcdshreg;
 	int dcd;
 
-	complex quality;
+	fftw_complex quality;
 
 	/*
 	 * TX related stuff

@@ -90,8 +90,8 @@ struct trx {
 	gfloat txoffset;
 
 	gint backspaces;
-	guchar *txstr;
-	guchar *txptr;
+	gchar *txstr;
+	gchar *txptr;
 
 	gfloat outbuf[OUTBUFSIZE];
 

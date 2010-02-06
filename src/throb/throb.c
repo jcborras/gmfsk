@@ -129,13 +129,13 @@ static float *mk_full_pulse(int len)
 /*
  * Make a 32 times downsampled complex prototype tone for rx.
  */
-static complex *mk_rxtone(double freq, float *pulse, int len)
+static fftw_complex *mk_rxtone(double freq, float *pulse, int len)
 {
-	complex *tone;
+	fftw_complex *tone;
 	double x;
 	int i;
 
-	tone = g_new0(complex, len / DownSample);
+	tone = g_new0(fftw_complex, len / DownSample);
 
 	for (i = 0; i < len; i += DownSample) {
 		x = -2.0 * M_PI * freq * i / SampleRate;

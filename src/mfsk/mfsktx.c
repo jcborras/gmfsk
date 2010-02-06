@@ -28,6 +28,13 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <complex.h>
+#ifdef HAVE_DFFTW_H
+  #include <dfftw.h>
+#endif
+#ifdef HAVE_FFTW_H
+  #include <fftw.h>
+#endif
 
 #include "mfsk.h"
 #include "trx.h"
@@ -41,10 +48,10 @@
 #include "filter.h"
 #include "main.h"
 
-static inline complex mixer(struct trx *trx, complex in)
+static inline fftw_complex mixer(struct trx *trx, fftw_complex in)
 {
 	struct mfsk *m = (struct mfsk *) trx->modem;
-	complex z;
+	fftw_complex z;
 	float f;
 
 	f = trx->frequency - trx->bandwidth / 2 + trx->txoffset;
@@ -70,7 +77,7 @@ static inline complex mixer(struct trx *trx, complex in)
 static void sendsymbol(struct trx *trx, int sym)
 {
 	struct mfsk *m = (struct mfsk *) trx->modem;
-	complex z;
+	fftw_complex z;
 	int i;
 
 	sym = grayencode(sym & (m->numtones - 1));
@@ -206,7 +213,8 @@ static void sendpic(struct trx *trx, guchar *data, gint len)
 int mfsk_txprocess(struct trx *trx)
 {
 	struct mfsk *m = (struct mfsk *) trx->modem;
-	unsigned char buf[64], *str;
+	unsigned char buf[64];
+	char *str;
 	int i;
 
 	if (trx->tune) {

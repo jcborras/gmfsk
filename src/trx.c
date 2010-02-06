@@ -788,7 +788,7 @@ gunichar trx_get_normal_tx_char(void)
 gunichar trx_get_tx_char(void)
 {
         GError *err = NULL;
-	guchar utf[8], *str;
+	gchar utf[8], *str;
 	gunichar chr;
 	gint len;
 	gchar *to = "ISO-8859-1";

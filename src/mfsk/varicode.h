@@ -25,7 +25,7 @@
 #ifndef _VARICODE_H
 #define _VARICODE_H
 
-extern unsigned char *varienc(unsigned char c);
+extern char *varienc(unsigned char c);
 extern int varidec(unsigned int symbol);
 
 #endif

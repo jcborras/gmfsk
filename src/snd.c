@@ -39,9 +39,9 @@
 #include <sys/soundcard.h>
 #include <sys/ioctl.h>
 
-#ifdef HAVE_LIBPULSE_SIMPLE
+#ifdef HAVE_PULSE_SIMPLE
 #include <pulse/simple.h>
-#endif /* HAVE_LIBPULSE_SIMPLE */
+#endif /* HAVE_PULSE_SIMPLE */
 
 #include "snd.h"
 #include "misc.h"
@@ -62,13 +62,13 @@ static snd_config_t newconfig;
 static gint snd_fd = -1;
 static gint snd_dir = 0;
 
-#ifdef HAVE_LIBPULSE_SIMPLE
+#ifdef HAVE_PULSE_SIMPLE
 static pa_simple *pas_in=NULL;
 static pa_simple *pas_out=NULL;
 #else
 void *pas_in=NULL;
 void *pas_out=NULL;
-#endif /* HAVE_LIBPULSE_SIMPLE */
+#endif /* HAVE_PULSE_SIMPLE */
 
 static gint16 snd_w_buffer[2 * SND_BUF_LEN];
 static guint8 snd_b_buffer[2 * SND_BUF_LEN];
@@ -324,11 +324,11 @@ gint sound_open_for_write(gint rate)
 	} else if (strcmp(config.device,"PulseAudio")==0) {
 		pa_sample_spec ss;
 
-		if (config.flags & SND_FLAG_8BIT==SND_FLAG_8BIT)
+		if (config.flags & SND_FLAG_8BIT)
 			ss.format = PA_SAMPLE_U8;
 		else
 			ss.format = PA_SAMPLE_S16NE;
-		if (config.flags & SND_FLAG_STEREO==SND_FLAG_STEREO)
+		if (config.flags & SND_FLAG_STEREO)
 			ss.channels = 2;
 		else
 			ss.channels = 1;
@@ -434,11 +434,11 @@ gint sound_open_for_read(gint rate)
 	} else if (strcmp(config.device,"PulseAudio")==0) {
 		pa_sample_spec ss;
 
-		if (config.flags & SND_FLAG_8BIT==SND_FLAG_8BIT)
+		if (config.flags & SND_FLAG_8BIT)
 			ss.format = PA_SAMPLE_U8;
 		else
 			ss.format = PA_SAMPLE_S16NE;
-		if (config.flags & SND_FLAG_STEREO==SND_FLAG_STEREO)
+		if (config.flags & SND_FLAG_STEREO)
 			ss.channels = 2;
 		else
 			ss.channels = 1;
