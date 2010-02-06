@@ -2,7 +2,7 @@
 # 
 AC_PREREQ(2.57)
 
-AC_INIT([gmfsk], [0.7pre1], [oh2bns@sral.fi])
+AC_INIT([gmfsk], [0.7pre2], [kd8jph@mynamehere.com])
 AC_CONFIG_SRCDIR([configure.ac])
 AC_CONFIG_HEADER([config.h])
 AM_INIT_AUTOMAKE
