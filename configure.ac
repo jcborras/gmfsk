@@ -9,7 +9,6 @@ AM_INIT_AUTOMAKE
 AM_MAINTAINER_MODE
 
 AH_TEMPLATE([GETTEXT_PACKAGE], [Gettext domain name])
-AH_TEMPLATE([WANT_HAMLIB], [Define to 1 if hamlib support is wanted])
 
 GETTEXT_PACKAGE=gmfsk
 AC_SUBST(GETTEXT_PACKAGE)
@@ -42,34 +41,6 @@ fi
 SCROLLKEEPER_BUILD_REQUIRED=0.3.5
 AC_SUBST(SCROLLKEEPER_BUILD_REQUIRED)
 
-pkg_modules="libgnomeui-2.0"
-# Checks for libraries.
-#
-AC_ARG_ENABLE(hamlib,
-	      AC_HELP_STRING([--enable-hamlib],
-			     [Add support for hamradio control libraries]),
-	      [enable_hamlib=$enableval],
-	      [enable_hamlib=no])
-
-if test "x$enable_hamlib" = "xyes"; then
-	pkg_modules+=" hamlib"
-fi
-
-PKG_CHECK_MODULES(PACKAGE, [$pkg_modules])
-AC_SUBST(PACKAGE_CFLAGS)
-AC_SUBST(PACKAGE_LIBS)
-
-if test "x$enable_hamlib" = "xyes"; then
-	AC_DEFINE(WANT_HAMLIB, 1)
-	AC_MSG_NOTICE([Enabling hamlib support])
-else
-	AC_DEFINE(WANT_HAMLIB, 0)
-	AC_MSG_NOTICE([Disabling hamlib support])
-fi
-
-PKG_CHECK_MODULES(libpulse_simple,libpulse-simple,AC_MSG_NOTICE([Using PulseAudio]),AC_MSG_NOTICE([Not using PulseAudio]))
-AC_CHECK_LIB(pulse-simple,main,AC_MSG_NOTICE([Using PulseAudio]),AC_MSG_NOTICE([Not using PulseAudio]))
-
 # Checks for header files.
 AC_HEADER_STDC
 AC_CHECK_HEADERS([fcntl.h limits.h stdlib.h string.h sys/ioctl.h unistd.h dfftw.h fftw.h linux/ppdev.h])
@@ -88,10 +59,30 @@ AC_FUNC_VPRINTF
 AC_CHECK_LIB([m],[cos])
 AC_CHECK_FUNCS([floor ceil fmod memcpy memmove memset pow sqrt strcasecmp strchr strdup strerror strstr mkdir log2 carg csqrt lrint lrintf])
 
+PKG_CHECK_MODULES(gnomeui_2, [libgnomeui-2.0])
+PKG_CHECK_MODULES(pulse_simple, [libpulse-simple],[AC_DEFINE([HAVE_PULSE_SIMPLE],[1],[Use PulseAudio])],[AC_MSG_NOTICE([libpulse-simple not found])])
+
+PACKAGE_CFLAGS="$gnomeui_2_CFLAGS $pulse_simple_CFLAGS"
+PACKAGE_LIBS="$gnomeui_2_LIBS $pulse_simple_LIBS"
+
+AC_SUBST(PACKAGE_CFLAGS)
+AC_SUBST(PACKAGE_LIBS)
+
+AC_CHECK_LIB([hamlib], [rig_init],,[AC_MSG_NOTICE([hamlib not found])])
+
 # Check for this library last so that it doesn't kill checks
 # for the libc functions
 AC_SEARCH_LIBS([fftw_create_plan], [dfftw fftw],,
 	       [AC_MSG_ERROR([FFTW libraries not found!!!])], [-lm])
+
+AC_ARG_ENABLE(
+  [debug],
+  AS_HELP_STRING([--enable-debug],[Set debug compiler options]),
+  # Flags for when we are debugging
+  CFLAGS="$CFLAGS -Wall -Werror -g3 -O0",
+  # Flags for when we are not debugging
+  CFLAGS="$CFLAGS -DNDEBUG"
+)
 
 # Output
 #
