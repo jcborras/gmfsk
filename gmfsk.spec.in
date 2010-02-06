@@ -16,6 +16,7 @@ BuildRoot:	/var/tmp/%{name}-root
 BuildRequires:	scrollkeeper >= %skreq
 BuildRequires:	hamlib-devel
 BuildRequires:	pulseaudio-libs-devel
+BuildRequires:	fftw2-devel
 
 %description
 

@@ -3471,7 +3471,9 @@ create_confdialog (void)
   soundcombo_items = g_list_append (soundcombo_items, (gpointer) _("/dev/dsp0"));
   soundcombo_items = g_list_append (soundcombo_items, (gpointer) _("/dev/dsp1"));
   soundcombo_items = g_list_append (soundcombo_items, (gpointer) _("/dev/dsp2"));
+#ifdef HAVE_PULSE_SIMPLE
   soundcombo_items = g_list_append (soundcombo_items, (gpointer) _("PulseAudio"));
+#endif /* HAVE_PULSE_SIMPLE */
   gtk_combo_set_popdown_strings (GTK_COMBO (soundcombo), soundcombo_items);
   g_list_free (soundcombo_items);
 
@@ -4700,7 +4702,9 @@ create_druidwindow (void)
   druid_soundcombo_items = g_list_append (druid_soundcombo_items, (gpointer) _("/dev/dsp"));
   druid_soundcombo_items = g_list_append (druid_soundcombo_items, (gpointer) _("/dev/dsp0"));
   druid_soundcombo_items = g_list_append (druid_soundcombo_items, (gpointer) _("/dev/dsp1"));
+#ifdef HAVE_PULSE_SIMPLE
   druid_soundcombo_items = g_list_append (druid_soundcombo_items, (gpointer) _("PulseAudio"));
+#endif /* HAVE_PULSE_SIMPLE */
   gtk_combo_set_popdown_strings (GTK_COMBO (druid_soundcombo), druid_soundcombo_items);
   g_list_free (druid_soundcombo_items);
 

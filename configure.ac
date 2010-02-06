@@ -67,8 +67,8 @@ else
 	AC_MSG_NOTICE([Disabling hamlib support])
 fi
 
-PKG_CHECK_MODULES(libpulse_simple,libpulse-simple, ,AC_MSG_ERROR([*** libpulse-simple devel is not installed - please install first ***]))
-AC_CHECK_LIB(pulse-simple,main, ,AC_MSG_ERROR([*** libpulse-simple devel is not installed - please install first ***]))
+PKG_CHECK_MODULES(libpulse_simple,libpulse-simple,AC_MSG_NOTICE([Using PulseAudio]),AC_MSG_NOTICE([Not using PulseAudio]))
+AC_CHECK_LIB(pulse-simple,main,AC_MSG_NOTICE([Using PulseAudio]),AC_MSG_NOTICE([Not using PulseAudio]))
 
 # Checks for header files.
 AC_HEADER_STDC

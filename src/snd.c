@@ -65,6 +65,9 @@ static gint snd_dir = 0;
 #ifdef HAVE_LIBPULSE_SIMPLE
 static pa_simple *pas_in=NULL;
 static pa_simple *pas_out=NULL;
+#else
+void *pas_in=NULL;
+void *pas_out=NULL;
 #endif /* HAVE_LIBPULSE_SIMPLE */
 
 static gint16 snd_w_buffer[2 * SND_BUF_LEN];
@@ -317,6 +320,7 @@ gint sound_open_for_write(gint rate)
 		snd_fd = 0;
 	} else if (config.flags & SND_FLAG_TESTMODE_MASK) {
 		snd_fd = 1;
+#ifdef HAVE_PULSE_SIMPLE
 	} else if (strcmp(config.device,"PulseAudio")==0) {
 		pa_sample_spec ss;
 
@@ -342,6 +346,7 @@ gint sound_open_for_write(gint rate)
 			NULL,			// Use default buffering attributes.
 			NULL			// Ignore error code.
 		);
+#endif /* HAVE_PULSE_SIMPLE */
 	} else if (!(config.flags & SND_FLAG_FULLDUP)) {
 		snd_fd = opensnd(O_WRONLY);
 	} else if (snd_fd < 0) {
@@ -389,8 +394,10 @@ gint sound_open_for_write(gint rate)
 	if (tx_src_state == NULL) {
 		snderr(_("sound_open_for_write: src_new failed: %s"), src_strerror(err));
 		snd_fd = -1;
+#ifdef HAVE_PULSE_SIMPLE
 		pa_simple_free(pas_out);
 		pas_out=NULL;
+#endif /* HAVE_PULSE_SIMPLE */
 		return -1;
 	}
 
@@ -423,6 +430,7 @@ gint sound_open_for_read(gint rate)
 		snd_fd = 0;
 	} else if (config.flags & SND_FLAG_TESTMODE_MASK) {
 		snd_fd = 0;
+#ifdef HAVE_PULSE_SIMPLE
 	} else if (strcmp(config.device,"PulseAudio")==0) {
 		pa_sample_spec ss;
 
@@ -458,6 +466,7 @@ gint sound_open_for_read(gint rate)
 			&attr,
 			NULL			// Ignore error code.
 		);
+#endif /* HAVE_PULSE_SIMPLE */
 	} else if (!(config.flags & SND_FLAG_FULLDUP)) {
 		snd_fd = opensnd(O_RDONLY);
 	} else if (snd_fd < 0) {
@@ -504,8 +513,10 @@ gint sound_open_for_read(gint rate)
 	if (rx_src_state == NULL) {
 		snderr(_("sound_open_for_read: src_new failed: %s"), src_strerror(err));
 		snd_fd = -1;
+#ifdef HAVE_PULSE_SIMPLE
 		pa_simple_free(pas_in);
 		pas_in=NULL;
+#endif /* HAVE_PULSE_SIMPLE */
 		return -1;
 	}
 
@@ -553,6 +564,7 @@ void sound_close(void)
 			snderr(_("sound_close: ioctl: SNDCTL_DSP_SYNC: %m"));
 		close(snd_fd);
 		snd_fd = -1;
+#ifdef HAVE_PULSE_SIMPLE
 	} else {
 		if (pas_in) {
 			pa_simple_free(pas_in);
@@ -562,6 +574,7 @@ void sound_close(void)
 			pa_simple_free(pas_out);
 			pas_out=NULL;
 		}
+#endif /* HAVE_PULSE_SIMPLE */
 	}
 }
 
@@ -654,7 +667,11 @@ static gint write_samples(gfloat *buf, gint count)
 	if (config.flags & SND_FLAG_STEREO)
 		count *= 2;
 
-	if (pas_out) {
+	if (!pas_out) {
+		if ((i = write(snd_fd, p, count)) < 0)
+			snderr(_("write_samples: write: %m"));
+#ifdef HAVE_PULSE_SIMPLE
+	} else {
 		int err=0;
 		pa_simple_write(pas_out,p,count,&err);
 		if (err==PA_OK) {
@@ -664,9 +681,7 @@ static gint write_samples(gfloat *buf, gint count)
 			errno=EIO;
 			snderr(_("write_samples: pa_simple_write: %m"));
 		}
-	} else {
-		if ((i = write(snd_fd, p, count)) < 0)
-			snderr(_("write_samples: write: %m"));
+#endif /* HAVE_PULSE_SIMPLE */
 	}
 
 	return i;
@@ -757,7 +772,11 @@ static gint read_samples(gfloat *buf, gint count)
 	if (config.flags & SND_FLAG_8BIT) {
 		count *= sizeof(guint8);
 
-		if (pas_in) {
+		if (!pas_in) {
+			if ((len = read(snd_fd, snd_b_buffer, count)) < 0)
+				goto error;
+#ifdef HAVE_PULSE_SIMPLE
+		} else {
 			int err=0;
 			pa_simple_read(pas_in,snd_b_buffer,count,&err);
 			if (err==PA_OK) {
@@ -767,9 +786,7 @@ static gint read_samples(gfloat *buf, gint count)
 				errno=EIO;
 				goto error;
 			}
-		} else {
-			if ((len = read(snd_fd, snd_b_buffer, count)) < 0)
-				goto error;
+#endif /* HAVE_PULSE_SIMPLE */
 		}
 
 		len /= sizeof(guint8);
@@ -785,7 +802,11 @@ static gint read_samples(gfloat *buf, gint count)
 	} else {
 		count *= sizeof(gint16);
 
-		if (pas_in) {
+		if (!pas_in) {
+			if ((len = read(snd_fd, snd_w_buffer, count)) < 0)
+				goto error;
+#ifdef HAVE_PULSE_SIMPLE
+		} else {
 			int err=0;
 			pa_simple_read(pas_in,snd_w_buffer,count,&err);
 			if (err==PA_OK) {
@@ -795,9 +816,7 @@ static gint read_samples(gfloat *buf, gint count)
 				errno=EIO;
 				goto error;
 			}
-		} else {
-			if ((len = read(snd_fd, snd_w_buffer, count)) < 0)
-				goto error;
+#endif /* HAVE_PULSE_SIMPLE */
 		}
 
 		len /= sizeof(gint16);
